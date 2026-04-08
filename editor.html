@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>指示書作成</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="editor-body">
+  <div class="editor-layout">
+    <section class="panel canvas-panel">
+      <div class="toolbar">
+        <button id="exportBtn" class="primary">エクスポート</button>
+        <button id="renderBtn">出力画像を作成</button>
+        <button id="deleteBtn" class="danger">選択中の数字を削除</button>
+        <span id="saveState" class="subhint">未保存</span>
+      </div>
+      <div class="subhint" id="captureModeNote" style="margin-bottom:10px;"></div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <img id="shotImage" alt="Screenshot" />
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="subhint" style="margin-top:10px;">
+        画像の空いている場所をクリックすると番号を追加できます。番号はドラッグ移動、先端の小さなハンドルをドラッグで線の向きを回転できます。Deleteキーで選択中の番号を削除できます。画像外や説明欄を押すと番号のフォーカスは外れます。左で番号を選ぶと、右の説明一覧はその番号が見やすい位置まで自動スクロールします。
+      </div>
+    </section>
+
+    <aside class="panel sidebar">
+      <h2 class="section-title">各番号の説明</h2>
+      <div id="infoList" class="info-list"></div>
+      <h2 class="section-title" style="margin-top:16px;">出力プレビュー</h2>
+      <canvas id="previewCanvas" class="preview-image"></canvas>
+    </aside>
+  </div>
+
+  <div class="footer-note">Ctrl+SでJSONをエクスポートします。入力内容はIndexedDBに自動保存されます。</div>
+  <script src="editor.js"></script>
+</body>
+</html>

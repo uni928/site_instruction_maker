@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site Instruction Maker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="popup-body">
+  <main class="popup-wrap">
+    <h1>指示書ツール</h1>
+    <button id="captureBtn" class="primary">フルページ撮影して開始</button>
+    <button id="visibleCaptureBtn">表示範囲だけ撮影</button>
+    <button id="resumeBtn">前回の内容から再開</button>
+    <button id="importBtn">インポートして再開</button>
+    <input id="importFile" type="file" accept="application/json,.json" hidden />
+    <p class="hint">Ctrl+SでもJSONを保存できます。編集中は IndexedDB に自動保存します。</p>
+    <div id="status" class="status"></div>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
