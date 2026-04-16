@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Site Instruction Maker",
-  "version": "1.3.4",
+  "version": "1.4.0",
   "description": "サイト修正指示用のフルページスクリーンショット注釈・指示書作成ツール",
   "permissions": [
     "storage",
