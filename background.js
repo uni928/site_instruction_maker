@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === 'CAPTURE_VISIBLE_SCREENSHOT') {
     (async () => {
       try {
-        const dataUrl = await chrome.tabs.captureVisibleTab(message.windowId, { format: 'png' });
+        const dataUrl = await captureVisibleTabWithQuotaGuard(message.windowId);
         const normalized = await normalizeTo1920(dataUrl);
         const draft = {
           version: 2,
@@ -37,6 +37,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 });
+
+const CAPTURE_MIN_INTERVAL_MS = 1200;
+let lastCaptureAt = 0;
+
+async function captureVisibleTabWithQuotaGuard(windowId, options = {}) {
+  const {
+    format = 'png',
+    retries = 4,
+    minIntervalMs = CAPTURE_MIN_INTERVAL_MS
+  } = options;
+
+  let attempt = 0;
+
+  while (true) {
+    const waitMs = Math.max(0, lastCaptureAt + minIntervalMs - Date.now());
+    if (waitMs > 0) {
+      await sleep(waitMs);
+    }
+
+    try {
+      const dataUrl = await chrome.tabs.captureVisibleTab(windowId, { format });
+      lastCaptureAt = Date.now();
+      return dataUrl;
+    } catch (error) {
+      const message = error?.message || '';
+      const isQuotaError =
+        message.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND') ||
+        message.includes('captureVisibleTab');
+
+      if (!isQuotaError || attempt >= retries) {
+        throw error;
+      }
+
+      attempt += 1;
+
+      const backoffMs = minIntervalMs * attempt;
+      await sleep(backoffMs);
+      lastCaptureAt = Date.now();
+    }
+  }
+}
 
 async function captureFullPage(tabId, windowId) {
   const [{ result: prepared }] = await chrome.scripting.executeScript({
@@ -67,8 +108,9 @@ async function captureFullPage(tabId, windowId) {
         args: [pos.x, pos.y]
       });
 
-      await sleep(180);
-      const dataUrl = await chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
+      await sleep(250);
+
+      const dataUrl = await captureVisibleTabWithQuotaGuard(windowId);
       const bitmap = await dataUrlToBitmap(dataUrl);
 
       if (!scale) {
@@ -84,8 +126,13 @@ async function captureFullPage(tabId, windowId) {
       const destY = Math.round(actualPos.y * scale);
       const drawWidth = Math.min(bitmap.width, stitchedCanvas.width - destX);
       const drawHeight = Math.min(bitmap.height, stitchedCanvas.height - destY);
+
       if (drawWidth > 0 && drawHeight > 0) {
-        stitchedCtx.drawImage(bitmap, 0, 0, drawWidth, drawHeight, destX, destY, drawWidth, drawHeight);
+        stitchedCtx.drawImage(
+          bitmap,
+          0, 0, drawWidth, drawHeight,
+          destX, destY, drawWidth, drawHeight
+        );
       }
     }
   } finally {
